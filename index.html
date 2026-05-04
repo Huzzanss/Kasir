@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Toko Rachmad</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<div class="header">
+  <div>
+    <div class="header-title">Toko Rachmad</div>
+    <div class="header-sub">Point of Sale</div>
+  </div>
+  <div class="header-logo">🏪</div>
+</div>
+
+<!-- ══════════════════ TAB BAR ══════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('kasir', this)">
+    <span class="tab-icon">🔍</span>Kasir
+  </button>
+  <button class="tab-btn" onclick="switchTab('produk', this)">
+    <span class="tab-icon">📦</span>Produk
+  </button>
+  <button class="tab-btn" onclick="switchTab('riwayat', this)">
+    <span class="tab-icon">📋</span>Riwayat
+  </button>
+</div>
+
+
+<!-- ══════════════════ TAB KASIR ══════════════════ -->
+<div id="page-kasir" class="page active">
+
+  <!-- Scanner -->
+  <div class="card">
+    <div class="section-title">📷 Scanner Barcode</div>
+    <div id="scanner-box">
+      <div id="reader"></div>
+      <div class="scanner-overlay">
+        <div class="scan-frame"><span></span><div class="scan-line"></div></div>
+      </div>
+    </div>
+    <div id="scan-status" style="display:none" class="scan-status">
+      <div class="pulse"></div> Scanner aktif — arahkan ke barcode
+    </div>
+    <button id="scan-toggle-btn" class="scan-toggle-btn start" onclick="toggleScanner()" style="margin-top:10px">
+      📷 Mulai Scan
+    </button>
+  </div>
+
+  <!-- Manual input -->
+  <div class="card">
+    <div class="section-title">⌨️ Input Manual</div>
+    <div class="input-group">
+      <label>Kode Barcode</label>
+      <input type="text" id="manual-barcode" placeholder="Masukkan kode barcode…" inputmode="numeric">
+    </div>
+    <button class="btn-primary" onclick="lookupBarcode(document.getElementById('manual-barcode').value)">
+      🔎 Cari Produk
+    </button>
+  </div>
+
+  <!-- Not found notice -->
+  <div id="not-found" class="not-found">
+    ❌ Produk tidak ditemukan. Tambahkan di tab Produk.
+  </div>
+
+  <!-- Product result -->
+  <div id="product-result" class="product-result">
+    <div class="product-name"    id="res-name"></div>
+    <div class="product-barcode" id="res-barcode"></div>
+    <div class="product-price"   id="res-price"></div>
+    <div class="qty-control">
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <div class="qty-display" id="qty-display">1</div>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+      <button class="add-cart-btn" onclick="addToCart()">🛒 Tambah</button>
+    </div>
+  </div>
+
+  <!-- Cart -->
+  <div class="card" id="cart-card">
+    <div class="section-title">🛒 Keranjang</div>
+    <div id="cart-list"></div>
+    <div id="cart-empty" class="cart-empty">🛒 Keranjang masih kosong</div>
+    <div class="total-bar" id="total-bar" style="display:none">
+      <span class="total-label">TOTAL</span>
+      <span class="total-amount" id="total-amount">Rp 0</span>
+    </div>
+    <button class="checkout-btn" id="checkout-btn" onclick="checkout()" style="display:none">
+      💰 Bayar Sekarang
+    </button>
+  </div>
+
+</div><!-- /page-kasir -->
+
+
+<!-- ══════════════════ TAB PRODUK ══════════════════ -->
+<div id="page-produk" class="page">
+
+  <button class="btn-primary" onclick="openAddProduct()" style="margin-bottom:14px">
+    ➕ Tambah Produk Baru
+  </button>
+
+  <div class="search-bar">
+    <span>🔍</span>
+    <input type="text" id="product-search" placeholder="Cari produk atau barcode…" oninput="renderProductList()">
+  </div>
+
+  <div class="card">
+    <div class="section-title">📦 Daftar Produk</div>
+    <div id="product-list"></div>
+  </div>
+
+</div><!-- /page-produk -->
+
+
+<!-- ══════════════════ TAB RIWAYAT ══════════════════ -->
+<div id="page-riwayat" class="page">
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Transaksi</div>
+      <div class="stat-value" id="stat-total-trx">0</div>
+    </div>
+    <div class="stat-card alt">
+      <div class="stat-label">Total Pendapatan</div>
+      <div class="stat-value" id="stat-total-income">Rp 0</div>
+    </div>
+  </div>
+
+  <div id="riwayat-list"></div>
+
+  <button class="btn-secondary" onclick="openChangePw()" style="width:100%;margin-top:8px;padding:13px;">
+    🔑 Ganti Password Hapus Transaksi
+  </button>
+
+</div><!-- /page-riwayat -->
+
+
+<!-- ══════════════════ MODAL: Tambah/Edit Produk ══════════════════ -->
+<div class="modal-overlay" id="modal-produk">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-produk-title">Tambah Produk</div>
+    <input type="hidden" id="edit-index" value="-1">
+
+    <div class="input-group">
+      <label>Nama Produk</label>
+      <input type="text" id="form-nama" placeholder="Contoh: Aqua 600ml">
+    </div>
+    <div class="input-group">
+      <label>Kode Barcode</label>
+      <input type="text" id="form-barcode" placeholder="Scan atau ketik barcode" inputmode="numeric">
+    </div>
+    <div class="input-group">
+      <label>Harga (Rp)</label>
+      <input type="number" id="form-harga" placeholder="5000" inputmode="numeric">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-produk')">Batal</button>
+      <button class="btn-primary"   onclick="saveProduct()" style="flex:1">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: Hapus Transaksi ══════════════════ -->
+<div class="modal-overlay" id="modal-del-trx">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔐 Hapus Transaksi</div>
+    <p style="color:var(--text-muted);font-size:14px;margin-bottom:14px">
+      Masukkan password untuk menghapus transaksi ini.
+    </p>
+    <input type="hidden" id="del-trx-id">
+
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="del-password" placeholder="Masukkan password…">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-del-trx')">Batal</button>
+      <button class="btn-danger"    onclick="confirmDeleteTrx()" style="flex:1">🗑️ Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODAL: Ganti Password ══════════════════ -->
+<div class="modal-overlay" id="modal-change-pw">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔑 Ganti Password</div>
+
+    <div class="input-group">
+      <label>Password Lama</label>
+      <input type="password" id="old-pw" placeholder="Password saat ini">
+    </div>
+    <div class="input-group">
+      <label>Password Baru</label>
+      <input type="password" id="new-pw" placeholder="Password baru (min. 4 karakter)">
+    </div>
+    <div class="input-group">
+      <label>Konfirmasi Password Baru</label>
+      <input type="password" id="confirm-pw" placeholder="Ulangi password baru">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('modal-change-pw')">Batal</button>
+      <button class="btn-primary"   onclick="changePassword()" style="flex:1">✅ Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
