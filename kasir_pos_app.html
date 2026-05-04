@@ -1,0 +1,395 @@
+
+<h2 class="sr-only">Aplikasi Kasir POS dengan scanner barcode, manajemen produk, dan riwayat transaksi</h2>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{max-width:420px;margin:0 auto;font-family:var(--font-sans)}
+.sticky-top{position:sticky;top:0;z-index:50;background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.app-header{padding:14px 16px 10px}
+.app-title{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.app-sub{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.tab-nav{display:flex;padding:0 16px;gap:2px}
+.tab-btn{flex:1;padding:9px 4px;border:none;background:none;font-family:var(--font-sans);font-size:13px;font-weight:400;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:all .15s}
+.tab-btn.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.main{padding:14px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--color-text-primary);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.btn-primary:hover{opacity:.9;background:var(--color-background-info)}
+.btn-success{background:var(--color-background-success);color:var(--color-text-success);border-color:transparent}
+.btn-success:hover{opacity:.9;background:var(--color-background-success)}
+.btn-danger{color:var(--color-text-danger);border-color:var(--color-border-danger);background:transparent}
+.btn-danger:hover{background:var(--color-background-danger)}
+.btn-sm{padding:5px 9px;font-size:11px}
+.btn-full{width:100%}
+.inp{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:9px 12px;color:var(--color-text-primary);font-family:var(--font-sans);font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.inp:focus{border-color:var(--color-border-primary)}
+.inp-mono{font-family:var(--font-mono)}
+.row{display:flex;gap:8px;align-items:center}
+.flabel{display:block;font-size:11px;color:var(--color-text-secondary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fg{margin-bottom:12px}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:8px 0}
+.cart-item{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.cart-item:last-child{border-bottom:none}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-unit{font-size:11px;color:var(--color-text-secondary);font-family:var(--font-mono);margin-top:1px}
+.qty-ctrl{display:flex;align-items:center;gap:5px}
+.qbtn{width:26px;height:26px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.qbtn:hover{background:var(--color-background-tertiary)}
+.qnum{font-family:var(--font-mono);font-size:13px;min-width:22px;text-align:center}
+.ci-total{font-family:var(--font-mono);font-size:12px;font-weight:500;min-width:72px;text-align:right;color:var(--color-text-info)}
+.xbtn{background:none;border:none;color:var(--color-text-secondary);cursor:pointer;padding:2px 4px;font-size:15px;line-height:1}
+.xbtn:hover{color:var(--color-text-danger)}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+.tl{font-size:13px;color:var(--color-text-secondary)}
+.tv{font-family:var(--font-mono);font-size:13px}
+.grand .tl{font-size:15px;color:var(--color-text-primary);font-weight:500}
+.grand .tv{font-size:21px;color:var(--color-text-info);font-weight:500}
+.empty-state{text-align:center;padding:28px 12px;color:var(--color-text-secondary)}
+.ei{font-size:32px;margin-bottom:8px}
+.et{font-size:12px;line-height:1.6}
+.pi-wrap{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pi-wrap:last-child{border-bottom:none}
+.pi-info{flex:1;min-width:0}
+.pi-name{font-size:13px;font-weight:500}
+.pi-bc{font-size:11px;color:var(--color-text-secondary);font-family:var(--font-mono);margin-top:1px}
+.pi-price{font-size:12px;color:var(--color-text-info);font-family:var(--font-mono);font-weight:500;margin-top:2px}
+.tx-item{padding:11px 0;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer}
+.tx-item:last-child{border-bottom:none}
+.tx-row{display:flex;justify-content:space-between;align-items:flex-start}
+.tx-date{font-size:12px;color:var(--color-text-secondary)}
+.tx-total{font-family:var(--font-mono);font-size:14px;color:var(--color-text-info);font-weight:500}
+.tx-meta{font-size:11px;color:var(--color-text-secondary);margin-top:3px}
+.tx-detail{margin-top:10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px}
+.tx-dr{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.tx-dr:last-child{margin-bottom:0}
+.cam-wrap{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:12px}
+#cam-video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.scan-box{width:62%;aspect-ratio:3/1;border:2px solid #f59e0b;border-radius:8px;box-shadow:0 0 0 1000px rgba(0,0,0,.4);position:relative;overflow:hidden}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:#f59e0b;animation:scanA 1.6s ease-in-out infinite}
+@keyframes scanA{0%,100%{top:5%}50%{top:88%}}
+#notif{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:8px 16px;font-size:12px;font-weight:500;text-align:center;margin-bottom:10px;display:none}
+#notif.ok{color:var(--color-text-success);border-color:var(--color-border-success);display:block}
+#notif.err{color:var(--color-text-danger);border-color:var(--color-border-danger);display:block}
+.pay-total{font-family:var(--font-mono);font-size:26px;font-weight:500;color:var(--color-text-info);text-align:center;padding:14px;background:var(--color-background-info);border-radius:var(--border-radius-md);margin-bottom:14px}
+.change-box{padding:12px;background:var(--color-background-success);border-radius:var(--border-radius-md);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.change-lbl{font-size:13px;color:var(--color-text-success)}
+#change-out{font-family:var(--font-mono);font-size:20px;font-weight:500;color:var(--color-text-success)}
+</style>
+
+<div class="app">
+  <div class="sticky-top">
+    <div class="app-header">
+      <div class="app-title">KasirPOS</div>
+      <div class="app-sub" id="app-sub">Siap melayani transaksi</div>
+    </div>
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="kasir" onclick="switchTab('kasir')">Kasir</button>
+      <button class="tab-btn" data-tab="produk" onclick="switchTab('produk')">Produk</button>
+      <button class="tab-btn" data-tab="riwayat" onclick="switchTab('riwayat')">Riwayat</button>
+    </div>
+  </div>
+  <div class="main">
+    <div id="notif"></div>
+    <div id="modal-area"></div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<script>
+let products={}, cart=[], transactions=[], activeTab='kasir', expandedTx=null, editingProduct=null, scanStream=null;
+
+const fmt = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n);
+const fmtDate = d => new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+async function loadData() {
+  try{const r=await window.storage.get('kpos_products');if(r)products=JSON.parse(r.value)}catch(e){}
+  try{const r=await window.storage.get('kpos_tx');if(r)transactions=JSON.parse(r.value)}catch(e){}
+}
+async function saveProd(){try{await window.storage.set('kpos_products',JSON.stringify(products))}catch(e){}}
+async function saveTx(){try{await window.storage.set('kpos_tx',JSON.stringify(transactions))}catch(e){}}
+
+function notify(msg,type='ok'){
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.className=type;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',2500);
+}
+
+function switchTab(tab){
+  activeTab=tab; stopScanner(); clearModal();
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  render();
+}
+
+function render(){
+  const el=document.getElementById('content');
+  if(activeTab==='kasir') el.innerHTML=kasirHTML();
+  else if(activeTab==='produk') el.innerHTML=produkHTML('');
+  else el.innerHTML=riwayatHTML();
+  updateSub();
+}
+
+function updateSub(){
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const count=cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('app-sub').textContent=count>0?`${count} item · ${fmt(total)}`:'Siap melayani transaksi';
+}
+
+function kasirHTML(){
+  const total=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const count=cart.reduce((s,i)=>s+i.qty,0);
+  return`<div class="row" style="margin-bottom:8px">
+    <input class="inp inp-mono" id="bc-inp" type="text" inputmode="numeric" placeholder="Ketik kode barcode..." onkeydown="if(event.key==='Enter')addByInput()" style="flex:1"/>
+    <button class="btn btn-primary" onclick="addByInput()">+&nbsp;Tambah</button>
+  </div>
+  <button class="btn btn-full" onclick="openScanner()" style="margin-bottom:14px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><line x1="16" y1="16" x2="21" y2="16"/><line x1="16" y1="16" x2="16" y2="21"/><line x1="21" y1="21" x2="21" y2="21"/></svg>
+    Scan Kamera
+  </button>
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <span class="card-title" style="margin:0;flex:1">Keranjang</span>
+      ${cart.length>0?`<button class="btn btn-sm btn-danger" onclick="clearCart()">Kosongkan</button>`:''}
+    </div>
+    ${cart.length===0?`<div class="empty-state"><div class="ei">🛒</div><p class="et">Keranjang masih kosong.<br>Scan atau ketik barcode produk.</p></div>`
+    :cart.map(i=>`<div class="cart-item">
+      <div class="ci-info"><div class="ci-name">${i.name}</div><div class="ci-unit">${fmt(i.price)}/pcs</div></div>
+      <div class="qty-ctrl">
+        <button class="qbtn" onclick="changeQty('${i.barcode}',-1)">−</button>
+        <span class="qnum">${i.qty}</span>
+        <button class="qbtn" onclick="changeQty('${i.barcode}',1)">+</button>
+      </div>
+      <span class="ci-total">${fmt(i.price*i.qty)}</span>
+      <button class="xbtn" onclick="removeItem('${i.barcode}')">×</button>
+    </div>`).join('')}
+  </div>
+  ${cart.length>0?`<div class="card">
+    <div class="total-row"><span class="tl">Jumlah item</span><span class="tv">${count}</span></div>
+    <div class="divider"></div>
+    <div class="total-row grand"><span class="tl">Total</span><span class="tv">${fmt(total)}</span></div>
+    <button class="btn btn-success btn-full" style="margin-top:12px" onclick="openPayment(${total})">Bayar Sekarang &rarr;</button>
+  </div>`:''}`;
+}
+
+function produkHTML(q){
+  const entries=Object.entries(products).filter(([bc,p])=>!q||p.name.toLowerCase().includes(q.toLowerCase())||bc.includes(q));
+  return`<div class="row" style="margin-bottom:12px">
+    <input class="inp" id="prod-srch" type="text" placeholder="Cari produk atau barcode..." oninput="searchProduk(this.value)" value="${q}" style="flex:1"/>
+    <button class="btn btn-primary" onclick="openAddProduct()">+&nbsp;Produk</button>
+  </div>
+  <div class="card">
+    <div class="card-title">${entries.length} produk${q?' ditemukan':' terdaftar'}</div>
+    ${entries.length===0?`<div class="empty-state"><div class="ei">📦</div><p class="et">${Object.keys(products).length===0?'Belum ada produk.<br>Tambahkan produk untuk memulai.':'Produk tidak ditemukan.'}</p></div>`
+    :entries.map(([bc,p])=>`<div class="pi-wrap">
+      <div class="pi-info">
+        <div class="pi-name">${p.name}</div>
+        <div class="pi-bc">${bc}</div>
+        <div class="pi-price">${fmt(p.price)}</div>
+      </div>
+      <div class="row">
+        <button class="btn btn-sm" onclick="openEditProduct('${bc}')">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="delProduct('${bc}')">Hapus</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function searchProduk(q){
+  document.getElementById('content').innerHTML=produkHTML(q);
+  const inp=document.getElementById('prod-srch');
+  if(inp){inp.focus();inp.setSelectionRange(q.length,q.length);}
+}
+
+function riwayatHTML(){
+  if(!transactions.length) return`<div class="empty-state" style="margin-top:32px"><div class="ei">📋</div><p class="et">Belum ada riwayat transaksi.</p></div>`;
+  return`<div class="card">${[...transactions].reverse().map(tx=>`
+    <div class="tx-item" onclick="toggleTx('${tx.id}')">
+      <div class="tx-row">
+        <div><div class="tx-date">${fmtDate(tx.date)}</div>
+        <div class="tx-meta">${tx.items.reduce((s,i)=>s+i.qty,0)} item · ${tx.items.length} jenis produk</div></div>
+        <div class="tx-total">${fmt(tx.total)}</div>
+      </div>
+      ${expandedTx===tx.id?`<div class="tx-detail">
+        ${tx.items.map(i=>`<div class="tx-dr"><span>${i.name} &times;${i.qty}</span><span style="font-family:var(--font-mono)">${fmt(i.price*i.qty)}</span></div>`).join('')}
+        <div style="height:0.5px;background:var(--color-border-tertiary);margin:7px 0"></div>
+        <div class="tx-dr"><span style="color:var(--color-text-secondary)">Dibayar</span><span style="font-family:var(--font-mono)">${fmt(tx.paid)}</span></div>
+        <div class="tx-dr"><span style="color:var(--color-text-secondary)">Kembalian</span><span style="font-family:var(--font-mono);color:var(--color-text-success)">${fmt(tx.change)}</span></div>
+      </div>`:''}
+    </div>`).join('')}</div>`;
+}
+
+function toggleTx(id){expandedTx=expandedTx===id?null:id;render();}
+
+function addByInput(){
+  const inp=document.getElementById('bc-inp');
+  const bc=inp?.value.trim();
+  if(!bc)return;
+  addToCart(bc);
+  if(inp){inp.value='';inp.focus();}
+}
+
+function addToCart(bc){
+  const p=products[bc];
+  if(!p){notify('Produk tidak ditemukan: '+bc,'err');return;}
+  const ex=cart.find(i=>i.barcode===bc);
+  if(ex)ex.qty++;
+  else cart.push({barcode:bc,name:p.name,price:p.price,qty:1});
+  notify(p.name+' ditambahkan ke keranjang');
+  render();
+}
+
+function changeQty(bc,d){
+  const i=cart.find(x=>x.barcode===bc);
+  if(!i)return;
+  i.qty+=d;
+  if(i.qty<=0)cart=cart.filter(x=>x.barcode!==bc);
+  render();
+}
+
+function removeItem(bc){cart=cart.filter(i=>i.barcode!==bc);render();}
+function clearCart(){if(!confirm('Kosongkan keranjang?'))return;cart=[];render();}
+
+function openPayment(total){
+  showModal(`
+    <div class="card-title" style="margin-bottom:12px">Pembayaran</div>
+    <div class="pay-total">${fmt(total)}</div>
+    <div class="fg"><label class="flabel">Uang diterima (Rp)</label>
+    <input class="inp inp-mono" id="paid-inp" type="number" inputmode="numeric" placeholder="0" style="font-size:18px" oninput="calcChange(${total})"/></div>
+    <div class="change-box">
+      <span class="change-lbl">Kembalian</span>
+      <span id="change-out">Rp 0</span>
+    </div>
+    <div class="row">
+      <button class="btn" style="flex:1" onclick="clearModal()">Batal</button>
+      <button class="btn btn-success" style="flex:1" onclick="doCheckout(${total})">Selesai ✓</button>
+    </div>
+  `);
+  setTimeout(()=>document.getElementById('paid-inp')?.focus(),50);
+}
+
+function calcChange(total){
+  const paid=parseInt(document.getElementById('paid-inp').value)||0;
+  const change=paid-total;
+  const el=document.getElementById('change-out');
+  if(el){el.textContent=fmt(Math.max(0,change));el.style.color=change<0?'var(--color-text-danger)':'var(--color-text-success)';}
+  document.querySelector('.change-box').style.background=change<0?'var(--color-background-danger)':'var(--color-background-success)';
+}
+
+function doCheckout(total){
+  const paid=parseInt(document.getElementById('paid-inp')?.value)||0;
+  if(paid<total){notify('Uang tidak cukup!','err');return;}
+  transactions.push({id:Date.now().toString(),date:new Date().toISOString(),items:cart.map(i=>({...i})),total,paid,change:paid-total});
+  saveTx(); cart=[]; clearModal();
+  notify('Transaksi berhasil disimpan!');
+  render();
+}
+
+function openAddProduct(){
+  editingProduct=null;
+  showModal(`
+    <div class="card-title" style="margin-bottom:12px">Tambah Produk Baru</div>
+    <div class="fg"><label class="flabel">Kode Barcode</label><input class="inp inp-mono" id="f-bc" type="text" inputmode="numeric" placeholder="Contoh: 8991234567890"/></div>
+    <div class="fg"><label class="flabel">Nama Produk</label><input class="inp" id="f-name" type="text" placeholder="Contoh: Aqua 600ml"/></div>
+    <div class="fg"><label class="flabel">Harga (Rp)</label><input class="inp inp-mono" id="f-price" type="number" inputmode="numeric" placeholder="0"/></div>
+    <div class="row">
+      <button class="btn" style="flex:1" onclick="clearModal()">Batal</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveProduct()">Simpan</button>
+    </div>
+  `);
+}
+
+function openEditProduct(bc){
+  editingProduct=bc;
+  const p=products[bc];
+  showModal(`
+    <div class="card-title" style="margin-bottom:12px">Edit Produk</div>
+    <div class="fg"><label class="flabel">Kode Barcode</label><input class="inp inp-mono" id="f-bc" type="text" value="${bc}" readonly style="opacity:.6"/></div>
+    <div class="fg"><label class="flabel">Nama Produk</label><input class="inp" id="f-name" type="text" value="${p.name}"/></div>
+    <div class="fg"><label class="flabel">Harga (Rp)</label><input class="inp inp-mono" id="f-price" type="number" value="${p.price}"/></div>
+    <div class="row">
+      <button class="btn" style="flex:1" onclick="clearModal()">Batal</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveProduct()">Simpan</button>
+    </div>
+  `);
+}
+
+function saveProduct(){
+  const bc=document.getElementById('f-bc')?.value.trim();
+  const name=document.getElementById('f-name')?.value.trim();
+  const price=parseInt(document.getElementById('f-price')?.value)||0;
+  if(!bc){notify('Kode barcode harus diisi','err');return;}
+  if(!name){notify('Nama produk harus diisi','err');return;}
+  if(price<=0){notify('Harga harus lebih dari 0','err');return;}
+  if(!editingProduct&&products[bc]){notify('Barcode sudah terdaftar','err');return;}
+  products[bc]={name,price}; saveProd(); clearModal();
+  notify(`"${name}" berhasil disimpan`);
+  render();
+}
+
+function delProduct(bc){
+  if(!confirm(`Hapus produk "${products[bc]?.name}"?`))return;
+  delete products[bc]; saveProd(); notify('Produk dihapus'); render();
+}
+
+async function openScanner(){
+  if(!navigator.mediaDevices?.getUserMedia){notify('Kamera tidak didukung di browser ini','err');return;}
+  showModal(`
+    <div class="card-title" style="margin-bottom:10px">Scan Barcode</div>
+    <div class="cam-wrap"><video id="cam-video" autoplay playsinline muted></video>
+      <div class="scan-guide"><div class="scan-box"><div class="scan-line"></div></div></div>
+    </div>
+    <p style="font-size:11px;color:var(--color-text-secondary);text-align:center;margin-bottom:12px">Arahkan kamera ke barcode produk</p>
+    <button class="btn btn-full btn-danger" onclick="stopScanner();clearModal()">Tutup Kamera</button>
+  `);
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}}});
+    const video=document.getElementById('cam-video');
+    video.srcObject=scanStream;
+    if('BarcodeDetector' in window){
+      const detector=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','upc_a','upc_e','qr_code']});
+      let last='',lastT=0;
+      const detect=async()=>{
+        if(!scanStream)return;
+        if(video.readyState>=2){
+          try{
+            const codes=await detector.detect(video);
+            if(codes.length){
+              const code=codes[0].rawValue,now=Date.now();
+              if(code!==last||now-lastT>2000){
+                last=code;lastT=now;
+                stopScanner();clearModal();addToCart(code);return;
+              }
+            }
+          }catch(e){}
+        }
+        requestAnimationFrame(detect);
+      };
+      requestAnimationFrame(detect);
+    } else {
+      notify('BarcodeDetector tidak didukung. Gunakan input manual.','err');
+    }
+  }catch(e){
+    notify('Gagal akses kamera: '+e.message,'err');
+    stopScanner();clearModal();
+  }
+}
+
+function stopScanner(){
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+}
+
+function showModal(html){
+  document.getElementById('modal-area').innerHTML=`<div class="card" style="border-color:var(--color-border-secondary);margin-bottom:14px">${html}</div>`;
+}
+function clearModal(){
+  stopScanner();
+  document.getElementById('modal-area').innerHTML='';
+}
+
+(async()=>{await loadData();render();})();
+</script>
