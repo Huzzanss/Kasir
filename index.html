@@ -76,10 +76,18 @@
       </div>
 
       <div class="kasir-footer">
+        <div class="diskon-row">
+          <span class="total-label">Diskon</span>
+          <div class="diskon-input-group">
+            <input type="number" id="diskonInput" placeholder="0" inputmode="numeric" min="0" max="100" />
+            <span class="diskon-pct">%</span>
+          </div>
+        </div>
         <div class="total-row">
           <span class="total-label">Total</span>
           <span class="total-amount" id="cartTotal">Rp 0</span>
         </div>
+        <div id="diskonInfo" class="diskon-info" style="display:none"></div>
         <div class="kasir-actions">
           <button class="btn-clear-cart" id="btnClearCart">🗑 Kosongkan</button>
           <button class="btn-bayar" id="btnBayar">💳 Bayar</button>
