@@ -597,6 +597,44 @@ html, body {
 .toast.error { background: var(--danger); }
 .toast.warn { background: var(--warn); color: #202124; }
 
+.diskon-row {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 10px;
+}
+.diskon-input-group {
+  display: flex; align-items: center;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--surface);
+  transition: border-color .2s;
+}
+.diskon-input-group:focus-within { border-color: var(--primary); }
+.diskon-input-group input {
+  width: 60px; padding: 7px 10px; border: none; outline: none;
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+  text-align: right; color: var(--danger);
+}
+.diskon-pct {
+  padding: 0 10px 0 4px; font-weight: 700;
+  color: var(--danger); font-size: 14px;
+}
+.diskon-info {
+  display: flex; flex-wrap: wrap;
+  justify-content: space-between;
+  font-size: 13px; color: var(--text-secondary);
+  margin-bottom: 8px; gap: 2px;
+}
+
+.riwayat-diskon {
+  display: block; font-size: 12px;
+  color: var(--danger); margin: 4px 0;
+}
+.btn-lihat-struk {
+  background: none; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); padding: 4px 8px;
+  font-size: 15px; cursor: pointer; transition: all .15s;
+}
+.btn-lihat-struk:active { background: var(--primary-light); border-color: var(--primary); }
+
 /* ======================== FILTER BAR ======================== */
 .filter-bar {
   display: flex; gap: 8px; margin-bottom: 10px;

@@ -120,10 +120,29 @@ function addToCart(barcode) {
   renderCart();
 }
 
+function getDiskon() { return Math.min(100, Math.max(0, parseInt(document.getElementById("diskonInput")?.value) || 0)); }
+
+function getTotal() {
+  const subtotal = cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  const diskon = getDiskon();
+  const potongan = Math.round(subtotal * diskon / 100);
+  return { subtotal, diskon, potongan, total: subtotal - potongan };
+}
+
 function renderCart() {
-  const total = cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  const { subtotal, diskon, potongan, total } = getTotal();
   cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0) + " item";
   cartTotal.textContent = formatRp(total);
+
+  // Diskon info
+  const diskonInfo = document.getElementById("diskonInfo");
+  if (diskon > 0 && cart.length > 0) {
+    diskonInfo.style.display = "flex";
+    diskonInfo.innerHTML = `<span>Subtotal</span><span>${formatRp(subtotal)}</span>`;
+    diskonInfo.innerHTML += `<span style="color:var(--danger)">Diskon ${diskon}%</span><span style="color:var(--danger)">-${formatRp(potongan)}</span>`;
+  } else {
+    diskonInfo.style.display = "none";
+  }
 
   if (cart.length === 0) {
     cartList.innerHTML = "";
@@ -167,9 +186,13 @@ cartList.addEventListener("click", e => {
 document.getElementById("btnClearCart").addEventListener("click", () => {
   if (cart.length === 0) return;
   cart = [];
+  document.getElementById("diskonInput").value = "";
   renderCart();
   showToast("Keranjang dikosongkan");
 });
+
+// Diskon input listener
+document.getElementById("diskonInput").addEventListener("input", renderCart);
 
 // =====================================================
 //  BAYAR MODAL
@@ -187,11 +210,11 @@ document.getElementById("btnBayar").addEventListener("click", () => {
   kembalianEl.textContent = "Rp 0";
   kembalianRow.classList.remove("kurang");
 
-  const total = cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  const { subtotal, diskon, potongan, total } = getTotal();
   paymentTotalEl.textContent = formatRp(total);
   paymentItemsEl.innerHTML = cart.map(i =>
     `<div class="payment-item-row"><span>${escHtml(i.nama)} x${i.qty}</span><span>${formatRp(i.harga * i.qty)}</span></div>`
-  ).join("");
+  ).join("") + (diskon > 0 ? `<div class="payment-item-row" style="color:var(--danger)"><span>Diskon ${diskon}%</span><span>-${formatRp(potongan)}</span></div>` : "");
 
   openModal(modalBayar);
   uangInput.focus();
@@ -202,7 +225,7 @@ document.getElementById("btnCloseBayar").addEventListener("click", () => closeMo
 uangInput.addEventListener("input", updateKembalian);
 
 function updateKembalian() {
-  const total   = cart.reduce((s, i) => s + i.harga * i.qty, 0);
+  const { total } = getTotal();
   const diterima = parseInt(uangInput.value) || 0;
   const kembalian = diterima - total;
   kembalianEl.textContent = formatRp(Math.abs(kembalian));
@@ -229,15 +252,16 @@ document.querySelector(".calc-grid").addEventListener("click", e => {
 });
 
 document.getElementById("btnKonfirmasiBayar").addEventListener("click", async () => {
-  const total    = cart.reduce((s, i) => s + i.harga * i.qty, 0);
-  const diterima = parseInt(uangInput.value) || 0;
+  const { subtotal, diskon, potongan, total } = getTotal();
+  const diterima  = parseInt(uangInput.value) || 0;
   const kembalian = diterima - total;
   if (diterima < total) return;
 
   const itemsSnapshot = cart.map(i => ({ nama: i.nama, barcode: i.barcode, harga: i.harga, qty: i.qty }));
   const transaksi = {
     items: itemsSnapshot,
-    total, uangDiterima: diterima, kembalian,
+    subtotal, diskon, potongan, total,
+    uangDiterima: diterima, kembalian,
     timestamp: serverTimestamp()
   };
 
@@ -256,16 +280,17 @@ document.getElementById("btnKonfirmasiBayar").addEventListener("click", async ()
     closeModal(modalBayar);
 
     // Tampilkan sukses + struk
+    document.querySelector(".sukses-icon").textContent = "✅";
+    document.querySelector("#modalSukses h3").textContent = "Pembayaran Berhasil!";
     document.getElementById("suksesTotal").textContent     = formatRp(total);
     document.getElementById("suksesDiterima").textContent  = formatRp(diterima);
     document.getElementById("suksesKembalian").textContent = formatRp(kembalian);
-    renderStruk(itemsSnapshot, total, diterima, kembalian);
+    renderStruk(itemsSnapshot, total, diterima, kembalian, diskon, potongan, new Date());
     openModal(document.getElementById("modalSukses"), true);
 
     cart = [];
+    document.getElementById("diskonInput").value = "";
     renderCart();
-
-    // Cek stok menipis
     setTimeout(cekStokMenipis, 1500);
   } catch (e) {
     showToast("Gagal menyimpan transaksi", "error");
@@ -278,9 +303,8 @@ document.getElementById("btnTutupSukses").addEventListener("click", () => {
 });
 
 // Struk
-function renderStruk(items, total, diterima, kembalian) {
-  const now = new Date();
-  const tgl = formatDate(now);
+function renderStruk(items, total, diterima, kembalian, diskon = 0, potongan = 0, tglDate = new Date()) {
+  const tgl = formatDate(tglDate);
   let html = `<div class="struk-header">🛒 Toko Rachmad</div>`;
   html += `<hr class="struk-divider">`;
   html += `<div style="font-size:11px;color:#666;text-align:center;margin-bottom:4px">${tgl}</div>`;
@@ -289,6 +313,15 @@ function renderStruk(items, total, diterima, kembalian) {
     html += `<div class="struk-row"><span>${escHtml(i.nama)} x${i.qty}</span><span>${formatRp(i.harga * i.qty)}</span></div>`;
   });
   html += `<hr class="struk-divider">`;
+  items.forEach(i => {
+    html += `<div class="struk-row"><span>${escHtml(i.nama)} x${i.qty}</span><span>${formatRp(i.harga * i.qty)}</span></div>`;
+  });
+  html += `<hr class="struk-divider">`;
+  if (diskon > 0) {
+    const sub = items.reduce((s, i) => s + i.harga * i.qty, 0);
+    html += `<div class="struk-row"><span>Subtotal</span><span>${formatRp(sub)}</span></div>`;
+    html += `<div class="struk-row" style="color:#ea4335"><span>Diskon ${diskon}%</span><span>-${formatRp(potongan)}</span></div>`;
+  }
   html += `<div class="struk-row"><span><b>Total</b></span><span><b>${formatRp(total)}</b></span></div>`;
   html += `<div class="struk-row"><span>Bayar</span><span>${formatRp(diterima)}</span></div>`;
   html += `<div class="struk-row"><span>Kembalian</span><span>${formatRp(kembalian)}</span></div>`;
@@ -472,15 +505,21 @@ function renderRiwayat() {
     div.className = "riwayat-item";
     const tgl = t.timestamp?.toDate ? t.timestamp.toDate() : new Date();
     const produkStr = (t.items || []).map(i => `${i.nama} x${i.qty}`).join(", ");
+    const diskonBaris = t.diskon > 0
+      ? `<span class="riwayat-diskon">Diskon ${t.diskon}%: -${formatRp(t.potongan || 0)}</span>` : "";
     div.innerHTML = `
       <div class="riwayat-item-header">
         <span class="riwayat-item-date">${formatDate(tgl)}</span>
         <span class="riwayat-item-total">${formatRp(t.total)}</span>
       </div>
       <div class="riwayat-item-products">${escHtml(produkStr)}</div>
+      ${diskonBaris}
       <div class="riwayat-item-footer">
         <span class="riwayat-kembalian">Kembalian: ${formatRp(t.kembalian)}</span>
-        <button class="btn-hapus-transaksi" data-id="${t.id}">🗑</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn-lihat-struk" data-id="${t.id}" title="Lihat Struk">🧾</button>
+          <button class="btn-hapus-transaksi" data-id="${t.id}">🗑</button>
+        </div>
       </div>
     `;
     riwayatList.appendChild(div);
@@ -488,10 +527,23 @@ function renderRiwayat() {
 }
 
 riwayatList.addEventListener("click", e => {
-  const btn = e.target.closest(".btn-hapus-transaksi");
-  if (!btn) return;
-  const id = btn.dataset.id;
-  askPassword("Hapus transaksi ini?", () => hapusTransaksi(id));
+  const hapusBtn = e.target.closest(".btn-hapus-transaksi");
+  const strukBtn = e.target.closest(".btn-lihat-struk");
+  if (hapusBtn) {
+    askPassword("Hapus transaksi ini?", () => hapusTransaksi(hapusBtn.dataset.id));
+  }
+  if (strukBtn) {
+    const t = riwayat.find(r => r.id === strukBtn.dataset.id);
+    if (t) {
+      renderStruk(t.items, t.total, t.uangDiterima, t.kembalian, t.diskon, t.potongan, t.timestamp?.toDate?.() || new Date());
+      openModal(document.getElementById("modalSukses"), true);
+      document.querySelector(".sukses-icon").textContent = "🧾";
+      document.querySelector("#modalSukses h3").textContent = "Detail Struk";
+      document.getElementById("suksesTotal").textContent    = formatRp(t.total);
+      document.getElementById("suksesDiterima").textContent = formatRp(t.uangDiterima);
+      document.getElementById("suksesKembalian").textContent = formatRp(t.kembalian);
+    }
+  }
 });
 
 document.getElementById("btnHapusSemua").addEventListener("click", () => {
