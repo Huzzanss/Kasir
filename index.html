@@ -1,225 +1,327 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Toko Rachmad</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a73e8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Toko Rachmad" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ══════════════════ HEADER ══════════════════ -->
-<div class="header">
-  <div>
-    <div class="header-title">Toko Rachmad</div>
-    <div class="header-sub">Point of Sale</div>
-  </div>
-  <div class="header-logo">🏪</div>
-</div>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="store-brand">
+        <div class="store-icon">🛒</div>
+        <div class="store-info">
+          <h1 class="store-name">Toko Rachmad</h1>
+          <span class="store-status" id="connectionStatus">Menghubungkan...</span>
+        </div>
+      </div>
+      <button class="btn-settings" id="btnOpenSettings" title="Pengaturan">⚙️</button>
+    </div>
+  </header>
 
-<!-- ══════════════════ TAB BAR ══════════════════ -->
-<div class="tab-bar">
-  <button class="tab-btn active" onclick="switchTab('kasir', this)">
-    <span class="tab-icon">🔍</span>Kasir
-  </button>
-  <button class="tab-btn" onclick="switchTab('produk', this)">
-    <span class="tab-icon">📦</span>Produk
-  </button>
-  <button class="tab-btn" onclick="switchTab('riwayat', this)">
-    <span class="tab-icon">📋</span>Riwayat
-  </button>
-</div>
+  <!-- TAB NAV -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="kasir">
+      <span class="tab-icon">🏪</span>
+      <span class="tab-label">Kasir</span>
+    </button>
+    <button class="tab-btn" data-tab="produk">
+      <span class="tab-icon">📦</span>
+      <span class="tab-label">Produk</span>
+    </button>
+    <button class="tab-btn" data-tab="riwayat">
+      <span class="tab-icon">📋</span>
+      <span class="tab-label">Riwayat</span>
+    </button>
+  </nav>
 
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
 
-<!-- ══════════════════ TAB KASIR ══════════════════ -->
-<div id="page-kasir" class="page active">
+    <!-- ======================== TAB KASIR ======================== -->
+    <section class="tab-panel active" id="tab-kasir">
+      <div class="kasir-scan-area">
+        <div class="scan-input-group">
+          <div class="scan-top-row">
+            <span class="scan-prefix">🔍</span>
+            <input type="text" id="kasirScanInput" placeholder="Ketik atau scan barcode..." inputmode="numeric" autocomplete="off" />
+            <button class="btn-scan-kamera" id="btnKasirKamera" title="Scan Kamera">📷</button>
+          </div>
+          <button class="btn-scan-add" id="btnKasirScan">+ Tambah ke Keranjang</button>
+        </div>
+      </div>
 
-  <!-- Scanner -->
-  <div class="card">
-    <div class="section-title">📷 Scanner Barcode</div>
-    <div id="scanner-box">
-      <div id="reader"></div>
-      <div class="scanner-overlay">
-        <div class="scan-frame"><span></span><div class="scan-line"></div></div>
+      <div class="cart-area">
+        <div class="cart-header">
+          <span class="cart-title">Keranjang</span>
+          <span class="cart-count" id="cartCount">0 item</span>
+        </div>
+        <div class="cart-list" id="cartList">
+          <div class="cart-empty" id="cartEmpty">
+            <span>🛒</span>
+            <p>Keranjang kosong</p>
+            <small>Scan barcode untuk menambah produk</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="kasir-footer">
+        <div class="total-row">
+          <span class="total-label">Total</span>
+          <span class="total-amount" id="cartTotal">Rp 0</span>
+        </div>
+        <div class="kasir-actions">
+          <button class="btn-clear-cart" id="btnClearCart">🗑 Kosongkan</button>
+          <button class="btn-bayar" id="btnBayar">💳 Bayar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================== TAB PRODUK ======================== -->
+    <section class="tab-panel" id="tab-produk">
+      <div class="produk-add-card">
+        <h3 class="section-title">Daftarkan Produk Baru</h3>
+        <div class="form-group">
+          <label>Barcode Produk</label>
+          <div class="barcode-input-group">
+            <input type="text" id="produkBarcode" placeholder="Scan atau ketik barcode..." inputmode="numeric" autocomplete="off" />
+            <button class="btn-scan-barcode" id="btnScanProduk" title="Scan Barcode">📷</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nama Produk</label>
+          <input type="text" id="produkNama" placeholder="Contoh: Aqua 600ml" autocomplete="off" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Harga (Rp)</label>
+            <input type="number" id="produkHarga" placeholder="5000" inputmode="numeric" />
+          </div>
+          <div class="form-group">
+            <label>Stok</label>
+            <input type="number" id="produkStok" placeholder="0" inputmode="numeric" />
+          </div>
+        </div>
+        <button class="btn-tambah-produk" id="btnTambahProduk">+ Tambah Produk</button>
+      </div>
+
+      <div class="produk-list-area">
+        <div class="produk-list-header">
+          <span class="section-title">Daftar Produk</span>
+          <div class="produk-search-wrap">
+            <input type="text" id="produkSearch" placeholder="🔍 Cari produk..." autocomplete="off" />
+          </div>
+        </div>
+        <div class="produk-list" id="produkList">
+          <div class="loading-state">Memuat produk...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================== TAB RIWAYAT ======================== -->
+    <section class="tab-panel" id="tab-riwayat">
+      <div class="riwayat-summary-card">
+        <div class="summary-stat">
+          <span class="summary-num" id="totalTransaksi">0</span>
+          <span class="summary-label">Total Transaksi</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-stat">
+          <span class="summary-num" id="totalPendapatan">Rp 0</span>
+          <span class="summary-label">Total Pendapatan</span>
+        </div>
+      </div>
+
+      <div class="riwayat-list-area">
+        <div class="riwayat-list-header">
+          <span class="section-title">Riwayat Transaksi</span>
+          <button class="btn-hapus-semua" id="btnHapusSemua">🗑 Hapus Semua</button>
+        </div>
+        <div class="riwayat-list" id="riwayatList">
+          <div class="loading-state">Memuat riwayat...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================== MODAL BAYAR ======================== -->
+  <div class="modal-overlay" id="modalBayar">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>💳 Pembayaran</h3>
+        <button class="modal-close" id="btnCloseBayar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="payment-summary">
+          <div class="payment-items" id="paymentItems"></div>
+          <div class="payment-total-row">
+            <span>Total Belanja</span>
+            <span id="paymentTotal" class="payment-total-num">Rp 0</span>
+          </div>
+        </div>
+        <div class="payment-input-area">
+          <label>Uang Diterima (Rp)</label>
+          <input type="number" id="uangDiterima" placeholder="0" inputmode="numeric" class="uang-input" />
+          <div class="kembalian-row">
+            <span>Kembalian</span>
+            <span id="kembalianDisplay" class="kembalian-num">Rp 0</span>
+          </div>
+          <!-- Kalkulator -->
+          <div class="calc-grid">
+            <button class="calc-btn" data-val="1">1</button>
+            <button class="calc-btn" data-val="2">2</button>
+            <button class="calc-btn" data-val="3">3</button>
+            <button class="calc-btn" data-val="4">4</button>
+            <button class="calc-btn" data-val="5">5</button>
+            <button class="calc-btn" data-val="6">6</button>
+            <button class="calc-btn" data-val="7">7</button>
+            <button class="calc-btn" data-val="8">8</button>
+            <button class="calc-btn" data-val="9">9</button>
+            <button class="calc-btn calc-zero" data-val="000">000</button>
+            <button class="calc-btn" data-val="0">0</button>
+            <button class="calc-btn calc-del" data-val="del">⌫</button>
+          </div>
+        </div>
+        <button class="btn-konfirmasi-bayar" id="btnKonfirmasiBayar">✅ Konfirmasi Bayar</button>
       </div>
     </div>
-    <div id="scan-status" style="display:none" class="scan-status">
-      <div class="pulse"></div> Scanner aktif — arahkan ke barcode
-    </div>
-    <button id="scan-toggle-btn" class="scan-toggle-btn start" onclick="toggleScanner()" style="margin-top:10px">
-      📷 Mulai Scan
-    </button>
   </div>
 
-  <!-- Manual input -->
-  <div class="card">
-    <div class="section-title">⌨️ Input Manual</div>
-    <div class="input-group">
-      <label>Kode Barcode</label>
-      <input type="text" id="manual-barcode" placeholder="Masukkan kode barcode…" inputmode="numeric">
-    </div>
-    <button class="btn-primary" onclick="lookupBarcode(document.getElementById('manual-barcode').value)">
-      🔎 Cari Produk
-    </button>
-  </div>
-
-  <!-- Not found notice -->
-  <div id="not-found" class="not-found">
-    ❌ Produk tidak ditemukan. Tambahkan di tab Produk.
-  </div>
-
-  <!-- Product result -->
-  <div id="product-result" class="product-result">
-    <div class="product-name"    id="res-name"></div>
-    <div class="product-barcode" id="res-barcode"></div>
-    <div class="product-price"   id="res-price"></div>
-    <div class="qty-control">
-      <button class="qty-btn" onclick="changeQty(-1)">−</button>
-      <div class="qty-display" id="qty-display">1</div>
-      <button class="qty-btn" onclick="changeQty(1)">+</button>
-      <button class="add-cart-btn" onclick="addToCart()">🛒 Tambah</button>
+  <!-- ======================== MODAL EDIT PRODUK ======================== -->
+  <div class="modal-overlay" id="modalEditProduk">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✏️ Edit Produk</h3>
+        <button class="modal-close" id="btnCloseEdit">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editProdukId" />
+        <div class="form-group">
+          <label>Barcode</label>
+          <input type="text" id="editBarcode" readonly class="input-readonly" />
+        </div>
+        <div class="form-group">
+          <label>Nama Produk</label>
+          <input type="text" id="editNama" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Harga (Rp)</label>
+            <input type="number" id="editHarga" inputmode="numeric" />
+          </div>
+          <div class="form-group">
+            <label>Stok</label>
+            <input type="number" id="editStok" inputmode="numeric" />
+          </div>
+        </div>
+        <button class="btn-simpan-edit" id="btnSimpanEdit">💾 Simpan Perubahan</button>
+      </div>
     </div>
   </div>
 
-  <!-- Cart -->
-  <div class="card" id="cart-card">
-    <div class="section-title">🛒 Keranjang</div>
-    <div id="cart-list"></div>
-    <div id="cart-empty" class="cart-empty">🛒 Keranjang masih kosong</div>
-    <div class="total-bar" id="total-bar" style="display:none">
-      <span class="total-label">TOTAL</span>
-      <span class="total-amount" id="total-amount">Rp 0</span>
-    </div>
-    <button class="checkout-btn" id="checkout-btn" onclick="checkout()" style="display:none">
-      💰 Bayar Sekarang
-    </button>
-  </div>
-
-</div><!-- /page-kasir -->
-
-
-<!-- ══════════════════ TAB PRODUK ══════════════════ -->
-<div id="page-produk" class="page">
-
-  <button class="btn-primary" onclick="openAddProduct()" style="margin-bottom:14px">
-    ➕ Tambah Produk Baru
-  </button>
-
-  <div class="search-bar">
-    <span>🔍</span>
-    <input type="text" id="product-search" placeholder="Cari produk atau barcode…" oninput="renderProductList()">
-  </div>
-
-  <div class="card">
-    <div class="section-title">📦 Daftar Produk</div>
-    <div id="product-list"></div>
-  </div>
-
-</div><!-- /page-produk -->
-
-
-<!-- ══════════════════ TAB RIWAYAT ══════════════════ -->
-<div id="page-riwayat" class="page">
-
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-label">Total Transaksi</div>
-      <div class="stat-value" id="stat-total-trx">0</div>
-    </div>
-    <div class="stat-card alt">
-      <div class="stat-label">Total Pendapatan</div>
-      <div class="stat-value" id="stat-total-income">Rp 0</div>
+  <!-- ======================== MODAL PASSWORD ======================== -->
+  <div class="modal-overlay" id="modalPassword">
+    <div class="modal-card modal-small">
+      <div class="modal-header">
+        <h3>🔐 Verifikasi Password</h3>
+        <button class="modal-close" id="btnClosePassword">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc" id="passwordDesc">Masukkan password untuk melanjutkan.</p>
+        <div class="form-group">
+          <input type="password" id="passwordInput" placeholder="Password..." class="password-input" />
+        </div>
+        <button class="btn-verifikasi" id="btnVerifikasi">🔓 Verifikasi</button>
+      </div>
     </div>
   </div>
 
-  <div id="riwayat-list"></div>
-
-  <button class="btn-secondary" onclick="openChangePw()" style="width:100%;margin-top:8px;padding:13px;">
-    🔑 Ganti Password Hapus Transaksi
-  </button>
-
-</div><!-- /page-riwayat -->
-
-
-<!-- ══════════════════ MODAL: Tambah/Edit Produk ══════════════════ -->
-<div class="modal-overlay" id="modal-produk">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-produk-title">Tambah Produk</div>
-    <input type="hidden" id="edit-index" value="-1">
-
-    <div class="input-group">
-      <label>Nama Produk</label>
-      <input type="text" id="form-nama" placeholder="Contoh: Aqua 600ml">
-    </div>
-    <div class="input-group">
-      <label>Kode Barcode</label>
-      <input type="text" id="form-barcode" placeholder="Scan atau ketik barcode" inputmode="numeric">
-    </div>
-    <div class="input-group">
-      <label>Harga (Rp)</label>
-      <input type="number" id="form-harga" placeholder="5000" inputmode="numeric">
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-produk')">Batal</button>
-      <button class="btn-primary"   onclick="saveProduct()" style="flex:1">💾 Simpan</button>
+  <!-- ======================== MODAL SETTINGS ======================== -->
+  <div class="modal-overlay" id="modalSettings">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙️ Pengaturan</h3>
+        <button class="modal-close" id="btnCloseSettings">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h4>Ubah Password Admin</h4>
+          <p class="settings-note">Password digunakan untuk hapus transaksi.</p>
+          <div class="form-group">
+            <label>Password Lama</label>
+            <input type="password" id="oldPassword" placeholder="Password saat ini..." />
+          </div>
+          <div class="form-group">
+            <label>Password Baru</label>
+            <input type="password" id="newPassword" placeholder="Password baru..." />
+          </div>
+          <div class="form-group">
+            <label>Konfirmasi Password Baru</label>
+            <input type="password" id="confirmPassword" placeholder="Ulangi password baru..." />
+          </div>
+          <button class="btn-simpan-password" id="btnSimpanPassword">💾 Simpan Password</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════ MODAL: Hapus Transaksi ══════════════════ -->
-<div class="modal-overlay" id="modal-del-trx">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">🔐 Hapus Transaksi</div>
-    <p style="color:var(--text-muted);font-size:14px;margin-bottom:14px">
-      Masukkan password untuk menghapus transaksi ini.
-    </p>
-    <input type="hidden" id="del-trx-id">
-
-    <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="del-password" placeholder="Masukkan password…">
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-del-trx')">Batal</button>
-      <button class="btn-danger"    onclick="confirmDeleteTrx()" style="flex:1">🗑️ Hapus</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════ MODAL: Ganti Password ══════════════════ -->
-<div class="modal-overlay" id="modal-change-pw">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">🔑 Ganti Password</div>
-
-    <div class="input-group">
-      <label>Password Lama</label>
-      <input type="password" id="old-pw" placeholder="Password saat ini">
-    </div>
-    <div class="input-group">
-      <label>Password Baru</label>
-      <input type="password" id="new-pw" placeholder="Password baru (min. 4 karakter)">
-    </div>
-    <div class="input-group">
-      <label>Konfirmasi Password Baru</label>
-      <input type="password" id="confirm-pw" placeholder="Ulangi password baru">
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('modal-change-pw')">Batal</button>
-      <button class="btn-primary"   onclick="changePassword()" style="flex:1">✅ Simpan</button>
+  <!-- ======================== MODAL SUKSES BAYAR ======================== -->
+  <div class="modal-overlay" id="modalSukses">
+    <div class="modal-card modal-small">
+      <div class="modal-body sukses-body">
+        <div class="sukses-icon">✅</div>
+        <h3>Pembayaran Berhasil!</h3>
+        <div class="sukses-detail">
+          <div class="sukses-row">
+            <span>Total</span><span id="suksesTotal">Rp 0</span>
+          </div>
+          <div class="sukses-row">
+            <span>Diterima</span><span id="suksesDiterima">Rp 0</span>
+          </div>
+          <div class="sukses-row highlight">
+            <span>Kembalian</span><span id="suksesKembalian">Rp 0</span>
+          </div>
+        </div>
+        <button class="btn-tutup-sukses" id="btnTutupSukses">Transaksi Selesai</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Toast notification -->
-<div class="toast" id="toast"></div>
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
-<script src="app.js"></script>
+  <!-- BARCODE SCANNER (hidden video) -->
+  <div class="scanner-overlay" id="scannerOverlay">
+    <div class="scanner-container">
+      <div class="scanner-header">
+        <h3>📷 Scan Barcode</h3>
+        <button class="scanner-close" id="btnCloseScanner">✕</button>
+      </div>
+      <video id="scannerVideo" autoplay playsinline></video>
+      <div class="scanner-frame">
+        <div class="scanner-line"></div>
+      </div>
+      <p class="scanner-hint">Arahkan kamera ke barcode</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
 </body>
 </html>
