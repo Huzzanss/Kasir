@@ -142,6 +142,17 @@
         </div>
       </div>
 
+      <!-- Filter Periode -->
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="hari">Hari Ini</button>
+        <button class="filter-btn" data-filter="minggu">Minggu Ini</button>
+        <button class="filter-btn" data-filter="bulan">Bulan Ini</button>
+        <button class="filter-btn" data-filter="semua">Semua</button>
+      </div>
+
+      <!-- Laporan -->
+      <button class="btn-laporan" id="btnLaporan">📊 Lihat Laporan</button>
+
       <div class="riwayat-list-area">
         <div class="riwayat-list-header">
           <span class="section-title">Riwayat Transaksi</span>
@@ -277,7 +288,7 @@
   </div>
 
   <!-- ======================== MODAL SUKSES BAYAR ======================== -->
-  <div class="modal-overlay" id="modalSukses">
+  <div class="modal-overlay" id="modalSukses" style="align-items:center">
     <div class="modal-card modal-small">
       <div class="modal-body sukses-body">
         <div class="sukses-icon">✅</div>
@@ -293,7 +304,37 @@
             <span>Kembalian</span><span id="suksesKembalian">Rp 0</span>
           </div>
         </div>
-        <button class="btn-tutup-sukses" id="btnTutupSukses">Transaksi Selesai</button>
+        <!-- Struk -->
+        <div class="struk-area" id="strukArea"></div>
+        <div class="sukses-actions">
+          <button class="btn-print-struk" id="btnPrintStruk">🖨️ Cetak Struk</button>
+          <button class="btn-tutup-sukses" id="btnTutupSukses">Selesai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== MODAL LAPORAN ======================== -->
+  <div class="modal-overlay" id="modalLaporan">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📊 Laporan Penjualan</h3>
+        <button class="modal-close" id="btnCloseLaporan">✕</button>
+      </div>
+      <div class="modal-body" id="laporanBody">
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== MODAL STOK MENIPIS ======================== -->
+  <div class="modal-overlay" id="modalStok" style="align-items:center">
+    <div class="modal-card modal-small">
+      <div class="modal-header">
+        <h3>⚠️ Stok Menipis</h3>
+        <button class="modal-close" id="btnCloseStok">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stok-list" id="stokMenipisList"></div>
       </div>
     </div>
   </div>

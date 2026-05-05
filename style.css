@@ -597,6 +597,92 @@ html, body {
 .toast.error { background: var(--danger); }
 .toast.warn { background: var(--warn); color: #202124; }
 
+/* ======================== FILTER BAR ======================== */
+.filter-bar {
+  display: flex; gap: 8px; margin-bottom: 10px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-btn {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 7px 14px;
+  font-size: 13px; font-weight: 600; font-family: var(--font);
+  cursor: pointer; white-space: nowrap; color: var(--text-secondary);
+  transition: all .15s;
+}
+.filter-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.btn-laporan {
+  width: 100%; background: var(--surface); border: 1.5px solid var(--primary);
+  color: var(--primary); border-radius: var(--radius-md);
+  padding: 11px; font-weight: 700; font-size: 14px;
+  cursor: pointer; font-family: var(--font); margin-bottom: 12px;
+  transition: all .15s;
+}
+.btn-laporan:hover { background: var(--primary-light); }
+
+/* ======================== STRUK ======================== */
+.struk-area {
+  background: #fff; border: 1px dashed var(--border);
+  border-radius: var(--radius-md); padding: 14px;
+  margin: 14px 0; font-family: var(--mono);
+  font-size: 12px; text-align: left; line-height: 1.8;
+  max-height: 200px; overflow-y: auto;
+}
+.struk-header { text-align: center; font-weight: 700; margin-bottom: 6px; }
+.struk-divider { border: none; border-top: 1px dashed #ccc; margin: 6px 0; }
+.struk-row { display: flex; justify-content: space-between; }
+.struk-footer { text-align: center; margin-top: 6px; font-size: 11px; color: var(--text-secondary); }
+
+.sukses-actions { display: flex; gap: 8px; }
+.btn-print-struk {
+  flex: 1; background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 11px;
+  font-weight: 600; font-size: 14px; cursor: pointer; font-family: var(--font);
+}
+.btn-tutup-sukses {
+  flex: 1; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius-md);
+  padding: 11px; font-weight: 700; font-size: 14px;
+  cursor: pointer; font-family: var(--font);
+}
+
+/* ======================== LAPORAN ======================== */
+.laporan-section { margin-bottom: 18px; }
+.laporan-section h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-secondary); }
+.laporan-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.laporan-stat {
+  background: var(--surface2); border-radius: var(--radius-md);
+  padding: 12px; text-align: center;
+}
+.laporan-stat-num { display: block; font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--primary); }
+.laporan-stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+.laporan-produk-row {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border2);
+  font-size: 13px;
+}
+.laporan-produk-row:last-child { border-bottom: none; }
+.laporan-produk-row span:last-child { font-weight: 700; color: var(--primary); font-family: var(--mono); }
+
+/* ======================== STOK MENIPIS ======================== */
+.stok-alert-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--danger); color: #fff;
+  border-radius: 50%; width: 18px; height: 18px;
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.tab-btn { position: relative; }
+.stok-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border2);
+}
+.stok-item:last-child { border-bottom: none; }
+.stok-item-name { font-size: 14px; font-weight: 600; }
+.stok-item-num { font-family: var(--mono); font-size: 13px; color: var(--danger); font-weight: 700; }
+
 /* ======================== UTILS ======================== */
 .loading-state, .empty-state {
   text-align: center; padding: 32px 16px;

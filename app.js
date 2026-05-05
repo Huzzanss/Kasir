@@ -43,6 +43,7 @@ function initFirebase() {
       products = {};
       snap.forEach(d => { products[d.data().barcode] = { id: d.id, ...d.data() }; });
       renderProdukList();
+      cekStokMenipis();
       connectionStatus.textContent  = "Terhubung ✓";
       connectionStatus.className    = "store-status connected";
     });
@@ -233,26 +234,39 @@ document.getElementById("btnKonfirmasiBayar").addEventListener("click", async ()
   const kembalian = diterima - total;
   if (diterima < total) return;
 
+  const itemsSnapshot = cart.map(i => ({ nama: i.nama, barcode: i.barcode, harga: i.harga, qty: i.qty }));
   const transaksi = {
-    items: cart.map(i => ({ nama: i.nama, barcode: i.barcode, harga: i.harga, qty: i.qty })),
-    total,
-    uangDiterima: diterima,
-    kembalian,
+    items: itemsSnapshot,
+    total, uangDiterima: diterima, kembalian,
     timestamp: serverTimestamp()
   };
 
   try {
     await addDoc(collection(db, "transactions"), transaksi);
+
+    // Kurangi stok otomatis
+    for (const item of cart) {
+      const p = products[item.barcode];
+      if (p && p.stok > 0) {
+        const newStok = Math.max(0, p.stok - item.qty);
+        await updateDoc(doc(db, "products", item.barcode), { stok: newStok });
+      }
+    }
+
     closeModal(modalBayar);
 
-    // Show success
-    document.getElementById("suksesTotal").textContent    = formatRp(total);
-    document.getElementById("suksesDiterima").textContent = formatRp(diterima);
+    // Tampilkan sukses + struk
+    document.getElementById("suksesTotal").textContent     = formatRp(total);
+    document.getElementById("suksesDiterima").textContent  = formatRp(diterima);
     document.getElementById("suksesKembalian").textContent = formatRp(kembalian);
+    renderStruk(itemsSnapshot, total, diterima, kembalian);
     openModal(document.getElementById("modalSukses"), true);
 
     cart = [];
     renderCart();
+
+    // Cek stok menipis
+    setTimeout(cekStokMenipis, 1500);
   } catch (e) {
     showToast("Gagal menyimpan transaksi", "error");
     console.error(e);
@@ -261,6 +275,38 @@ document.getElementById("btnKonfirmasiBayar").addEventListener("click", async ()
 
 document.getElementById("btnTutupSukses").addEventListener("click", () => {
   closeModal(document.getElementById("modalSukses"));
+});
+
+// Struk
+function renderStruk(items, total, diterima, kembalian) {
+  const now = new Date();
+  const tgl = formatDate(now);
+  let html = `<div class="struk-header">🛒 Toko Rachmad</div>`;
+  html += `<hr class="struk-divider">`;
+  html += `<div style="font-size:11px;color:#666;text-align:center;margin-bottom:4px">${tgl}</div>`;
+  html += `<hr class="struk-divider">`;
+  items.forEach(i => {
+    html += `<div class="struk-row"><span>${escHtml(i.nama)} x${i.qty}</span><span>${formatRp(i.harga * i.qty)}</span></div>`;
+  });
+  html += `<hr class="struk-divider">`;
+  html += `<div class="struk-row"><span><b>Total</b></span><span><b>${formatRp(total)}</b></span></div>`;
+  html += `<div class="struk-row"><span>Bayar</span><span>${formatRp(diterima)}</span></div>`;
+  html += `<div class="struk-row"><span>Kembalian</span><span>${formatRp(kembalian)}</span></div>`;
+  html += `<hr class="struk-divider">`;
+  html += `<div class="struk-footer">Terima kasih! 🙏</div>`;
+  document.getElementById("strukArea").innerHTML = html;
+}
+
+document.getElementById("btnPrintStruk").addEventListener("click", () => {
+  const isi = document.getElementById("strukArea").innerHTML;
+  const w = window.open("", "_blank", "width=400,height=600");
+  w.document.write(`<html><head><title>Struk - Toko Rachmad</title>
+  <style>body{font-family:monospace;font-size:13px;padding:16px;max-width:300px;margin:auto}
+  .struk-row{display:flex;justify-content:space-between}.struk-header{text-align:center;font-weight:700;font-size:15px}
+  .struk-footer{text-align:center;font-size:11px;color:#666}.struk-divider{border:none;border-top:1px dashed #ccc;margin:6px 0}
+  </style></head><body>${isi}</body></html>`);
+  w.document.close();
+  w.print();
 });
 
 // =====================================================
@@ -382,18 +428,46 @@ async function hapusProduk(barcode) {
 // =====================================================
 //  RIWAYAT TAB
 // =====================================================
+let filterAktif = "hari";
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    filterAktif = btn.dataset.filter;
+    renderRiwayat();
+  });
+});
+
+function filterRiwayat() {
+  const now = new Date();
+  return riwayat.filter(t => {
+    const tgl = t.timestamp?.toDate ? t.timestamp.toDate() : new Date();
+    if (filterAktif === "hari") {
+      return tgl.toDateString() === now.toDateString();
+    } else if (filterAktif === "minggu") {
+      const diff = (now - tgl) / (1000 * 60 * 60 * 24);
+      return diff <= 7;
+    } else if (filterAktif === "bulan") {
+      return tgl.getMonth() === now.getMonth() && tgl.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+}
+
 function renderRiwayat() {
-  const totalAmt = riwayat.reduce((s, t) => s + (t.total || 0), 0);
-  document.getElementById("totalTransaksi").textContent  = riwayat.length;
+  const filtered = filterRiwayat();
+  const totalAmt = filtered.reduce((s, t) => s + (t.total || 0), 0);
+  document.getElementById("totalTransaksi").textContent  = filtered.length;
   document.getElementById("totalPendapatan").textContent = formatRp(totalAmt);
 
-  if (riwayat.length === 0) {
-    riwayatList.innerHTML = `<div class="empty-state">📋 Belum ada transaksi</div>`;
+  if (filtered.length === 0) {
+    riwayatList.innerHTML = `<div class="empty-state">📋 Tidak ada transaksi</div>`;
     return;
   }
 
   riwayatList.innerHTML = "";
-  riwayat.forEach(t => {
+  filtered.forEach(t => {
     const div = document.createElement("div");
     div.className = "riwayat-item";
     const tgl = t.timestamp?.toDate ? t.timestamp.toDate() : new Date();
@@ -446,6 +520,84 @@ async function hapusSemua() {
     console.error(e);
   }
 }
+
+// =====================================================
+//  LAPORAN
+// =====================================================
+document.getElementById("btnLaporan").addEventListener("click", () => {
+  const filtered = filterRiwayat();
+  const total = filtered.reduce((s, t) => s + (t.total || 0), 0);
+  const jumlah = filtered.length;
+
+  // Produk terlaris
+  const produkMap = {};
+  filtered.forEach(t => {
+    (t.items || []).forEach(i => {
+      if (!produkMap[i.nama]) produkMap[i.nama] = { qty: 0, total: 0 };
+      produkMap[i.nama].qty   += i.qty;
+      produkMap[i.nama].total += i.harga * i.qty;
+    });
+  });
+  const terlaris = Object.entries(produkMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5);
+
+  const labelFilter = { hari: "Hari Ini", minggu: "Minggu Ini", bulan: "Bulan Ini", semua: "Semua Waktu" };
+  let html = `
+    <div class="laporan-section">
+      <h4>📅 Periode: ${labelFilter[filterAktif]}</h4>
+      <div class="laporan-stat-grid">
+        <div class="laporan-stat">
+          <span class="laporan-stat-num">${jumlah}</span>
+          <span class="laporan-stat-label">Transaksi</span>
+        </div>
+        <div class="laporan-stat">
+          <span class="laporan-stat-num">${formatRp(total)}</span>
+          <span class="laporan-stat-label">Pendapatan</span>
+        </div>
+        <div class="laporan-stat">
+          <span class="laporan-stat-num">${jumlah > 0 ? formatRp(Math.round(total/jumlah)) : "Rp 0"}</span>
+          <span class="laporan-stat-label">Rata-rata/Transaksi</span>
+        </div>
+        <div class="laporan-stat">
+          <span class="laporan-stat-num">${Object.keys(produkMap).length}</span>
+          <span class="laporan-stat-label">Jenis Produk Terjual</span>
+        </div>
+      </div>
+    </div>`;
+
+  if (terlaris.length > 0) {
+    html += `<div class="laporan-section"><h4>🏆 Produk Terlaris</h4>`;
+    terlaris.forEach(([nama, data]) => {
+      html += `<div class="laporan-produk-row"><span>${escHtml(nama)} (${data.qty} pcs)</span><span>${formatRp(data.total)}</span></div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<div class="empty-state">Belum ada data penjualan</div>`;
+  }
+
+  document.getElementById("laporanBody").innerHTML = html;
+  openModal(document.getElementById("modalLaporan"));
+});
+document.getElementById("btnCloseLaporan").addEventListener("click", () => closeModal(document.getElementById("modalLaporan")));
+
+// =====================================================
+//  STOK MENIPIS
+// =====================================================
+function cekStokMenipis() {
+  const menipis = Object.values(products).filter(p => p.stok <= 5);
+
+  // Badge di tab Produk
+  const tabProduk = document.querySelector('.tab-btn[data-tab="produk"]');
+  const existingBadge = tabProduk.querySelector(".stok-alert-badge");
+  if (existingBadge) existingBadge.remove();
+  if (menipis.length > 0) {
+    const badge = document.createElement("div");
+    badge.className = "stok-alert-badge";
+    badge.textContent = menipis.length;
+    tabProduk.appendChild(badge);
+  }
+}
+
+document.getElementById("btnCloseStok").addEventListener("click", () => closeModal(document.getElementById("modalStok")));
 
 // =====================================================
 //  PASSWORD MODAL
